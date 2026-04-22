@@ -1,229 +1,103 @@
-import useTheme from "@/src/hooks/useTheme"; // Ensuring it matches your custom theme system
-import { useSignIn } from '@clerk/expo';
-import { type Href, Link, useRouter } from 'expo-router';
-import React from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { FontAwesome } from "@expo/vector-icons";
+import { Image } from 'expo-image';
+import { Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import useSocialAuth from '../../hooks/useSocialAuth';
+export default function SignInScreen() {
+  const { handleSocialAuth, loadingStrategy } = useSocialAuth();
+  const isGoogleClicked = loadingStrategy === 'oauth_google';
+  const isGithubClicked = loadingStrategy === 'oauth_github';
+  const isFacebookClicked = loadingStrategy === 'oauth_facebook';
 
-export default function Page() {
-  const { signIn, errors, fetchStatus } = useSignIn()
-  const router = useRouter()
-  const { colors } = useTheme()
-
-  const [emailAddress, setEmailAddress] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const [code, setCode] = React.useState('')
-
-  const handleSubmit = async () => {
-    const { error } = await signIn.password({
-      emailAddress,
-      password,
-    })
-    if (error) {
-      console.error(JSON.stringify(error, null, 2))
-      return
-    }
-
-    if (signIn.status === 'complete') {
-      await signIn.finalize({
-        navigate: ({ decorateUrl }) => {
-          const url = decorateUrl('/')
-          router.push(url as Href)
-        },
-      })
-    } else if (signIn.status === 'needs_client_trust') {
-      const emailCodeFactor = signIn.supportedSecondFactors.find(
-        (factor) => factor.strategy === 'email_code',
-      )
-      if (emailCodeFactor) {
-        await signIn.mfa.sendEmailCode()
-      }
-    }
-  }
-
-  const handleVerify = async () => {
-    await signIn.mfa.verifyEmailCode({ code })
-
-    if (signIn.status === 'complete') {
-      await signIn.finalize({
-        navigate: ({ decorateUrl }) => {
-          const url = decorateUrl('/')
-          router.push(url as Href)
-        },
-      })
-    }
-  }
-
-  // Common input style logic
-  const inputThemeStyles = {
-    backgroundColor: colors.backgrounds.input,
-    color: colors.text,
-    borderColor: colors.border,
-  }
-
-  // Verification State
-  if (signIn.status === 'needs_client_trust') {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          Verify your account
-        </Text>
-        <TextInput
-          style={[styles.input, inputThemeStyles]}
-          value={code}
-          placeholder="Enter your verification code"
-          placeholderTextColor={colors.textMuted}
-          onChangeText={setCode}
-          keyboardType="numeric"
-        />
-        {errors.fields.code && (
-          <Text style={styles.error}>{errors.fields.code.message}</Text>
-        )}
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: colors.primary },
-            fetchStatus === 'fetching' && styles.buttonDisabled,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleVerify}
-          disabled={fetchStatus === 'fetching'}
-        >
-          {fetchStatus === 'fetching' ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Verify</Text>
-          )}
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
-          onPress={() => signIn.mfa.sendEmailCode()}
-        >
-          <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>I need a new code</Text>
-        </Pressable>
-      </View>
-    )
-  }
-
-  // Default Sign-In State
+  const isLoading = isGoogleClicked || isGithubClicked || isFacebookClicked;
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.text }]}>
-        Sign in
-      </Text>
+    <SafeAreaView className='flex-1 bg-primary dark:bg-secondary' edges={["top"]}>
+      {/* decorative elements */}
+      <View className='absolute -left-16 top-12 h-56 w-56 rounded-full bg-primary/80 dark:bg-background/40' />
+      <View className='absolute right-[-74px] top-40 h-72 w-72 rounded-full bg-primary/70 dark:bg-background/35' />
 
-      <Text style={[styles.label, { color: colors.text }]}>Email address</Text>
-      <TextInput
-        style={[styles.input, inputThemeStyles]}
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        placeholderTextColor={colors.textMuted}
-        onChangeText={setEmailAddress}
-        keyboardType="email-address"
-      />
-      {errors.fields.identifier && (
-        <Text style={styles.error}>{errors.fields.identifier.message}</Text>
-      )}
+      <View className='px-6 pt-4'>
+        <Text className='text-center text-5xl font-extrabold tracking-tight text-primary-foreground uppercase font-mono dark:text-foreground'>
+          Grocify
+        </Text>
+        <Text className='mt-1 text-center text-[14px] text-primary-foreground/80 dark:text-foreground/75'>
+          Plan smarter. Shop happier.
+        </Text>
 
-      <Text style={[styles.label, { color: colors.text }]}>Password</Text>
-      <TextInput
-        style={[styles.input, inputThemeStyles]}
-        value={password}
-        placeholder="Enter password"
-        placeholderTextColor={colors.textMuted}
-        secureTextEntry={true}
-        onChangeText={setPassword}
-      />
-      {errors.fields.password && (
-        <Text style={styles.error}>{errors.fields.password.message}</Text>
-      )}
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.button,
-          { backgroundColor: colors.primary },
-          (!emailAddress || !password || fetchStatus === 'fetching') && styles.buttonDisabled,
-          pressed && styles.buttonPressed,
-        ]}
-        onPress={handleSubmit}
-        disabled={!emailAddress || !password || fetchStatus === 'fetching'}
-      >
-        <Text style={styles.buttonText}>Continue</Text>
-      </Pressable>
-
-      <View style={styles.linkContainer}>
-        <Text style={{ color: colors.textMuted }}>Dono&apos;t have an account? </Text>
-        <Link href="/sign-up">
-          <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Sign up</Text>
-        </Link>
+        <View className='mt-6 rounded-[30px] border border-white/20 bg-white/20 p-3'>
+          <Image
+            source={require('../../../assets/images/auth.png')}
+            style={{ width: '100%', height: 280 }}
+            contentFit='contain'
+          />
+        </View>
       </View>
-    </View>
+      <View className='mt-8 flex-1 rounded-t-[36px] bg-card px-6 pb-8 pt-6'>
+        <View className='self-center rounded-full dark:bg-white/10 bg-background px-3 py-1'>
+          <Text className='text-xs font-bold uppercase tracking-[1px] text-secondary-foreground'>
+            Welcome back
+          </Text>
+        </View>
+        <Text className='mt-2 text-center text-sm leading-6 text-muted-foreground'>
+          Choose a social provider and jump into your personalised grocery experience.
+        </Text>
+        <View className='mt-6'>
+          <Pressable
+            className={`mb-3 h-14 flex-row items-center rounded-2xl border border-border bg-card px-4 active:opacity-90 ${isLoading ? "opacity-70" : ""
+              }`}
+            disabled={isLoading}
+            onPress={() => handleSocialAuth("oauth_google")}
+          >
+            <View className='h-8 w-8 items-center justify-center rounded-full bg-white'>
+              <Image
+                source={require("../../../assets/images/google.png")}
+                style={{ width: 20, height: 20 }} />
+            </View>
+            <Text className="ml-3 flex-1 text-lg font-semibold text-card-foreground">
+              {isGoogleClicked ? "Connecting Google..." : "Continue with Google"}
+            </Text>
+
+            <FontAwesome name="angle-right" size={18} color="#5f6e66" />
+          </Pressable>
+          <Pressable
+            className={`mb-3 h-14 flex-row items-center rounded-2xl border border-border bg-card px-4 active:opacity-90 ${isLoading ? "opacity-70" : ""
+              }`}
+            disabled={isLoading}
+            onPress={() => handleSocialAuth("oauth_facebook")}
+          >
+            <View className='h-8 w-8 items-center justify-center rounded-full bg-white'>
+              <Image
+                source={require("../../../assets/images/facebook.png")}
+                style={{ width: 20, height: 20 }} />
+            </View>
+            <Text className="ml-3 flex-1 text-lg font-semibold text-card-foreground">
+              {isFacebookClicked ? "Connecting Facebook..." : "Continue with Facebook"}
+            </Text>
+
+            <FontAwesome name="angle-right" size={18} color="#5f6e66" />
+          </Pressable>
+          <Pressable
+            className={`mb-3 h-14 flex-row items-center rounded-2xl border border-border bg-card px-4 active:opacity-90 ${isLoading ? "opacity-70" : ""
+              }`}
+            disabled={isLoading}
+            onPress={() => handleSocialAuth("oauth_github")}
+          >
+            <View className='h-8 w-8 items-center justify-center rounded-full bg-white'>
+              <Image
+                source={require("../../../assets/images/github.png")}
+                style={{ width: 20, height: 20 }} />
+            </View>
+            <Text className="ml-3 flex-1 text-lg font-semibold text-card-foreground">
+              {isGithubClicked ? "Connecting Github..." : "Continue with Github"}
+            </Text>
+
+            <FontAwesome name="angle-right" size={18} color="#5f6e66" />
+          </Pressable>
+        </View>
+        <Text className="mt-3 text-center text-sm leading-5 text-muted-foreground">
+          By continuing, you agree to our Terms and Privacy Policy.
+        </Text>
+      </View>
+    </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  label: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  button: {
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  secondaryButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    fontWeight: '600',
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  error: {
-    color: '#ef4444',
-    fontSize: 12,
-    marginTop: -4,
-  }
-})

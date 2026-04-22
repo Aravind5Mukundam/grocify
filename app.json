@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "GROCIFY",
-    "slug": "GROCIFY",
+    "name": "grocify",
+    "slug": "grocify",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "grocify",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.devburakork.grocify"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,29 +18,35 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.aravind5mukundam.GROCIFY"
+      "package": "com.devburakork.grocify"
     },
     "web": {
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      // "@clerk/expo",
+      "@clerk/expo",
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
+          "backgroundColor": "#208AEF",
+          "android": {
+            "image": "./assets/images/splash-icon.png",
+            "imageWidth": 76
           }
         }
-      ]
+      ],
+      "expo-web-browser",
+      // [
+      //   "@sentry/react-native/expo",
+      //   {
+      //     "url": "https://sentry.io/",
+      //     "project": "grocify",
+      //     "organization": "codesistency-gs"
+      //   }
+      // ]
     ],
     "experiments": {
       "typedRoutes": true,
