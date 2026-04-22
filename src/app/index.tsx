@@ -8,9 +8,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text>Edit app/index.tsx to edit this screen. ARAVIND</Text>
-      
-
+      <Text className="text-blue-500 bg-purple-400">Edit app/index.tsx to edit this screen. ARAVIND</Text> 
     </View>
   );
 }
